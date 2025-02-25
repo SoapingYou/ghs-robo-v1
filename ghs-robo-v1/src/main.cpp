@@ -1,4 +1,5 @@
 #include "main.h"
+#include "velocities.h"
 
 /**
  * A callback function for LLEMU's center button.
@@ -89,8 +90,8 @@ void opcontrol()
 		// Arcade control scheme
 		int dir = master.get_analog(ANALOG_LEFT_X);	  // Gets amount forward/backward from left joystick, axis 4
 		int turn = master.get_analog(ANALOG_RIGHT_Y); // Gets the turn left/right from right joystick, axis 2
-		left_mg.move(dir - turn);					  // Sets left motor voltage
-		right_mg.move(dir + turn);					  // Sets right motor voltage
+		left_mg.move(dir + turn);					  // Sets left motor voltage
+		right_mg.move(dir - turn);					  // Sets right motor voltage
 		pros::delay(20);							  // Run for 20 ms then update
 	}
 }
