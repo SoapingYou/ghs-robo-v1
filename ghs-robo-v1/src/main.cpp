@@ -1,5 +1,5 @@
 #include "main.h"
-#include "velocities.h"
+#include "GHSChassis.h"
 
 /**
  * A callback function for LLEMU's center button.
@@ -84,7 +84,7 @@ void opcontrol()
 	pros::Controller master(pros::E_CONTROLLER_MASTER);
 	pros::MotorGroup left_mg({-11, 12, -13});  // Creates a motor group with forwards ports 12 and reversed ports 11 & 13
 	pros::MotorGroup right_mg({-16, -17, 18}); // Creates a motor group with forwards port 18 and reversed ports 16 & 17
-
+	GHSChassis chassisController = GHSChassis(0);
 	while (true)
 	{
 		// Arcade control scheme
