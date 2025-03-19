@@ -1,29 +1,40 @@
 #include "GHSChassis.h" //problem> not being included. all variable declarations here are redeclarations.
-#include <iostream>
 
-class GHSChassis
+GHSChassis::GHSChassis(const std::shared_ptr<pros::v5::MotorGroup> ileftMotors,
+                       const std::shared_ptr<pros::v5::MotorGroup> irightMotors,
+                       const int irpm)
+    : leftMotors(ileftMotors), rightMotors(irightMotors),
+      rpm(irpm)
 {
-public:
-    GHSChassis::GHSChassis(const int itypeOfScale) : typeOfScale(itypeOfScale)
+    // controller = icontroller;
+    leftMotors = ileftMotors;
+    rightMotors = irightMotors;
+    // inputAxisSpeed = iinputAxisSpeed;
+    //  inputAxisDirection = iinputAxisDirection;
+    typeOfScale = 0;
+}
+void GHSChassis::runDrivetrain()
+{
+    scaleInputs();
+    motorScale();
+    setDrivetrains();
+}
+void GHSChassis::scaleInputs()
+{
+    switch (typeOfScale)
     {
+    case 0:
+        scaledInputs = inputs;
     }
-    // Velocities(double inputx, double inputy)
-    int typeOfScale;
-    double linear_vel;  // final
-    double angular_vel; // final
-    int inputx;
-    int inputy;
-    std::pair<int, int> scale(std::vector<double> parameters)
-    {
-        switch (typeOfScale)
-        {
-        case 0:
-            return std::make_pair(0, 0);
-            break;
-        }
-    }
-    std::pair<int, int> motors()
-    {
-        return std::make_pair(linear_vel + angular_vel, linear_vel - angular_vel);
-    }
-};
+}
+void GHSChassis::motorScale()
+{
+    motorScaled[0] = (scaledInputs[0] / 2) + (scaledInputs[1] / 2) * rpm / 100;
+    motorScaled[1] = (scaledInputs[0] / 2) - (scaledInputs[1] / 2) * rpm / 100;
+}
+
+void GHSChassis::setDrivetrains()
+{
+    leftMotors->move_velocity(motorScaled[0]);
+    rightMotors->move_velocity(motorScaled[1]);
+}

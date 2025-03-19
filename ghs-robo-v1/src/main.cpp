@@ -81,17 +81,21 @@ void autonomous() {}
  */
 void opcontrol()
 {
-	pros::Controller master(pros::E_CONTROLLER_MASTER);
-	pros::MotorGroup left_mg({-11, 12, -13});  // Creates a motor group with forwards ports 12 and reversed ports 11 & 13
-	pros::MotorGroup right_mg({-16, -17, 18}); // Creates a motor group with forwards port 18 and reversed ports 16 & 17
-	GHSChassis chassisController = GHSChassis(0);
+	pros::Controller master(pros::E_CONTROLLER_MASTER); // this gonna be a custom controller
+	pros::MotorGroup left_mg({-11, 12, -13});			// Creates a motor group with forwards ports 12 and reversed ports 11 & 13
+	pros::MotorGroup right_mg({-16, -17, 18});
+
+	// the drivetrain at sophie's house
+	auto left_mg_s = std::make_shared<pros::MotorGroup>(std::vector<std::int8_t>{11});
+	auto right_mg_s = std::make_shared<pros::MotorGroup>(std::vector<std::int8_t>{-20});
+	auto chassisController = std::make_shared<GHSChassis>(left_mg_s, right_mg_s, 200);
+
 	while (true)
 	{
 		// Arcade control scheme
-		int dir = master.get_analog(ANALOG_LEFT_X);	  // Gets amount forward/backward from left joystick, axis 4
-		int turn = master.get_analog(ANALOG_RIGHT_Y); // Gets the turn left/right from right joystick, axis 2
-		left_mg.move(dir + turn);					  // Sets left motor voltage
-		right_mg.move(dir - turn);					  // Sets right motor voltage
-		pros::delay(20);							  // Run for 20 ms then update
+		chassisController->inputs[0] = master.get_analog(ANALOG_LEFT_X);  // Gets amount forward/backward from left joystick, axis 4
+		chassisController->inputs[1] = master.get_analog(ANALOG_RIGHT_Y); // Gets the turn left/right from right joystick, axis 2
+		chassisController->runDrivetrain();								  // Sets right motor voltage
+		pros::delay(20);												  // Run for 20 ms then update
 	}
 }
