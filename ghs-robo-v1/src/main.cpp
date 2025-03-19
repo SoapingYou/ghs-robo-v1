@@ -93,8 +93,8 @@ void opcontrol()
 	while (true)
 	{
 		// Arcade control scheme
-		chassisController->inputs[0] = master.get_analog(ANALOG_LEFT_X);  // Gets amount forward/backward from left joystick, axis 4
-		chassisController->inputs[1] = master.get_analog(ANALOG_RIGHT_Y); // Gets the turn left/right from right joystick, axis 2
+		chassisController->inputs[0] = master.get_analog(ANALOG_LEFT_Y);  // Gets amount forward/backward from left joystick, axis 4
+		chassisController->inputs[1] = master.get_analog(ANALOG_RIGHT_X); // Gets the turn left/right from right joystick, axis 2
 		chassisController->runDrivetrain();								  // Sets right motor voltage
 		pros::delay(20);												  // Run for 20 ms then update
 	}

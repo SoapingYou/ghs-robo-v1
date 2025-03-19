@@ -29,8 +29,8 @@ void GHSChassis::scaleInputs()
 }
 void GHSChassis::motorScale()
 {
-    motorScaled[0] = (scaledInputs[0] / 2) + (scaledInputs[1] / 2) * rpm / 100;
-    motorScaled[1] = (scaledInputs[0] / 2) - (scaledInputs[1] / 2) * rpm / 100;
+    motorScaled[0] = ((scaledInputs[0] / 2) + (scaledInputs[1] / 2)) * rpm / 100;
+    motorScaled[1] = ((scaledInputs[0] / 2) - (scaledInputs[1] / 2)) * rpm / 100;
 }
 
 void GHSChassis::setDrivetrains()
