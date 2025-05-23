@@ -1,6 +1,6 @@
 #include "main.h"
 #include "GHSChassis.h"
-
+#include "Odometry.h"
 /**
  * A callback function for LLEMU's center button.
  *
@@ -79,23 +79,100 @@ void autonomous() {}
  * operator control task will be stopped. Re-enabling the robot will restart the
  * task, not resume it from where it left off.
  */
+
+struct Params
+{
+	std::shared_ptr<pros::Controller> master;
+	std::shared_ptr<pros::adi::DigitalOut> piston;
+};
+
+void clamptask(void *param)
+{
+	Params *myParams = static_cast<Params *>(param);
+	std::shared_ptr<pros::Controller> master = myParams->master;
+	std::shared_ptr<pros::adi::DigitalOut> piston = myParams->piston;
+	bool prevState = false;
+	bool clamp = false;
+	int dummy = 0;
+	while (true)
+	{
+		if (master->get_digital(pros::E_CONTROLLER_DIGITAL_B))
+			clamp = true;
+		else
+			clamp = false;
+
+		if (prevState != clamp)
+			piston->set_value(clamp);
+		prevState = clamp;
+		// if (dummy % 10)
+		// {
+		// 	if ((dummy / 10) % 2)
+		// 		pros::lcd::set_text((dummy / 10) % 8, "i got a brand new saxophone");
+		// 	else
+		// 		pros::lcd::set_text((dummy / 10) % 8, "i just jumped the band director");
+		// }
+		// dummy++;
+		pros::delay(20);
+	}
+}
 void opcontrol()
 {
-	pros::Controller master(pros::E_CONTROLLER_MASTER); // this gonna be a custom controller
-	pros::MotorGroup left_mg({-11, 12, -13});			// Creates a motor group with forwards ports 12 and reversed ports 11 & 13
+	auto master = std::make_shared<pros::Controller>(pros::E_CONTROLLER_MASTER);
+	pros::MotorGroup left_mg({-11, 12, -13}); // Creates a motor group with forwards ports 12 and reversed ports 11 & 13
 	pros::MotorGroup right_mg({-16, -17, 18});
 
 	// the drivetrain at sophie's house
 	auto left_mg_s = std::make_shared<pros::MotorGroup>(std::vector<std::int8_t>{11});
 	auto right_mg_s = std::make_shared<pros::MotorGroup>(std::vector<std::int8_t>{-20});
+
+	left_mg_s->set_encoder_units_all(pros::E_MOTOR_ENCODER_DEGREES);
+	right_mg_s->set_encoder_units_all(pros::E_MOTOR_ENCODER_DEGREES);
+
+	auto odometry = std::make_shared<Odometry>(left_mg_s, right_mg_s, 14, 2.0, 0);
 	auto chassisController = std::make_shared<GHSChassis>(left_mg_s, right_mg_s, 200);
 
+	auto intake = std::make_shared<pros::Motor>(5);
+	bool intake_bool = true;
+
+	auto piston = std::make_shared<pros::adi::DigitalOut>('A');
+	bool clamp = false;
+
+	Params params;
+	params.master = master;
+	params.piston = piston;
+	pros::Task clamp_task(clamptask, &params);
+
+	// odometry->runOdometry(true);
 	while (true)
 	{
 		// Arcade control scheme
-		chassisController->inputs[0] = master.get_analog(ANALOG_LEFT_Y);  // Gets amount forward/backward from left joystick, axis 4
-		chassisController->inputs[1] = master.get_analog(ANALOG_RIGHT_X); // Gets the turn left/right from right joystick, axis 2
-		chassisController->runDrivetrain();								  // Sets right motor voltage
-		pros::delay(20);												  // Run for 20 ms then update
+		// odometry->runOdometry(true);
+		// std::cout << master->get_analog(ANALOG_LEFT_X) << std::endl;
+		chassisController->inputs[0] = master->get_analog(ANALOG_LEFT_Y);  // Gets amount forward/backward from left joystick, axis 4
+		chassisController->inputs[1] = master->get_analog(ANALOG_RIGHT_X); // Gets the turn left/right from right joystick, axis 2
+		std::cout << "input[0]" << std::to_string(chassisController->inputs[0]) << std::endl;
+		std::cout << "input[1]" << std::to_string(chassisController->inputs[1]) << std::endl;
+		chassisController->runDrivetrain(true); // Sets right motor voltage
+		if (master->get_digital(pros::E_CONTROLLER_DIGITAL_X))
+		{
+			chassisController->typeOfScale = !chassisController->typeOfScale;
+			std::cout << "changed" << std::endl;
+		}
+		// if (master->get_digital(pros::E_CONTROLLER_DIGITAL_B))
+		// {
+		// 	piston->set_value(!clamp);
+		// 	clamp = !clamp;
+		// 	pros::delay(5);
+		// }
+		// if (master->get_digital(pros::E_CONTROLLER_DIGITAL_A))
+		// {
+		// 	intake->move_velocity(100);
+		// }
+		// else
+		// {
+		// 	intake->move_velocity(0);
+		// }
+
+		pros::delay(20); // Run for 20 ms then update
 	}
 }
