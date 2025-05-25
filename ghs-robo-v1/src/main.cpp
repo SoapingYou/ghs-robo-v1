@@ -115,6 +115,16 @@ void clamptask(void *param)
 		pros::delay(20);
 	}
 }
+void odometrytask(void *param)
+{
+	auto odom = static_cast<std::shared_ptr<Odometry> *>(param);
+	while (true)
+	{
+		(*odom)->runOdometry(true);
+		std::cout << "testing odom runs. " << std::endl;
+		pros::delay(20);
+	}
+}
 void opcontrol()
 {
 	auto master = std::make_shared<pros::Controller>(pros::E_CONTROLLER_MASTER);
@@ -129,7 +139,7 @@ void opcontrol()
 	right_mg_s->set_encoder_units_all(pros::E_MOTOR_ENCODER_DEGREES);
 
 	auto odometry = std::make_shared<Odometry>(left_mg_s, right_mg_s, 14, 2.0, 0);
-	auto chassisController = std::make_shared<GHSChassis>(left_mg_s, right_mg_s, 200);
+	auto chassisController = std::make_shared<GHSChassis>(master, left_mg_s, right_mg_s, 200);
 
 	auto intake = std::make_shared<pros::Motor>(5);
 	bool intake_bool = true;
@@ -142,17 +152,13 @@ void opcontrol()
 	params.piston = piston;
 	pros::Task clamp_task(clamptask, &params);
 
-	// odometry->runOdometry(true);
+	pros::Task odometry_task(odometrytask, &odometry);
+
 	while (true)
 	{
 		// Arcade control scheme
-		// odometry->runOdometry(true);
-		// std::cout << master->get_analog(ANALOG_LEFT_X) << std::endl;
-		chassisController->inputs[0] = master->get_analog(ANALOG_LEFT_Y);  // Gets amount forward/backward from left joystick, axis 4
-		chassisController->inputs[1] = master->get_analog(ANALOG_RIGHT_X); // Gets the turn left/right from right joystick, axis 2
-		std::cout << "input[0]" << std::to_string(chassisController->inputs[0]) << std::endl;
-		std::cout << "input[1]" << std::to_string(chassisController->inputs[1]) << std::endl;
 		chassisController->runDrivetrain(true); // Sets right motor voltage
+
 		if (master->get_digital(pros::E_CONTROLLER_DIGITAL_X))
 		{
 			chassisController->typeOfScale = !chassisController->typeOfScale;

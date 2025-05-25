@@ -1,26 +1,27 @@
 #include "GHSChassis.h"
 
-GHSChassis::GHSChassis(const std::shared_ptr<pros::v5::MotorGroup> ileftMotors,
+GHSChassis::GHSChassis(const std::shared_ptr<pros::Controller> icontroller,
+                       const std::shared_ptr<pros::v5::MotorGroup> ileftMotors,
                        const std::shared_ptr<pros::v5::MotorGroup> irightMotors,
                        const int irpm)
-    : leftMotors(ileftMotors), rightMotors(irightMotors),
+    : controller(icontroller), leftMotors(ileftMotors), rightMotors(irightMotors),
       rpm(irpm)
 {
-    // controller = icontroller;
+    controller = icontroller;
     leftMotors = ileftMotors;
     rightMotors = irightMotors;
     // inputAxisSpeed = iinputAxisSpeed;
     //  inputAxisDirection = iinputAxisDirection;
     typeOfScale = 0;
 }
-
-GHSChassis::GHSChassis(const std::shared_ptr<pros::v5::MotorGroup> ileftMotors,
+GHSChassis::GHSChassis(const std::shared_ptr<pros::Controller> icontroller,
+                       const std::shared_ptr<pros::v5::MotorGroup> ileftMotors,
                        const std::shared_ptr<pros::v5::MotorGroup> irightMotors,
                        const int irpm, const double ipolyParams)
-    : leftMotors(ileftMotors), rightMotors(irightMotors),
+    : controller(icontroller), leftMotors(ileftMotors), rightMotors(irightMotors),
       rpm(irpm), polyParams(ipolyParams)
 {
-    // controller = icontroller;
+    controller = icontroller;
     leftMotors = ileftMotors;
     rightMotors = irightMotors;
     // inputAxisSpeed = iinputAxisSpeed;
@@ -30,22 +31,36 @@ GHSChassis::GHSChassis(const std::shared_ptr<pros::v5::MotorGroup> ileftMotors,
 
 void GHSChassis::runDrivetrain(bool debug)
 {
+    getInputs(debug);
     scaleInputs(debug);
     motorScale(debug);
     setDrivetrains(debug);
+}
+void GHSChassis::getInputs(bool debug)
+{
+    inputs[0] = controller->get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);  // Gets amount forward/backward from left joystick, axis 4
+    inputs[1] = controller->get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X); // Gets the turn left/right from right joystick, axis 2
+    if (debug)
+    {
+        std::cout << "inputs: " << inputs[0] << ", " << inputs[1] << std::endl;
+    }
 }
 void GHSChassis::scaleInputs(bool debug)
 {
     switch (typeOfScale)
     {
     case 0:
-        scaledInputs = inputs;
+        scaledInputs[0] = inputs[0];
+        scaledInputs[1] = inputs[1];
+        break;
 
     case 1:
         scalePolys();
+        break;
     }
     if (debug)
     {
+        std::cout << "typeOfScale: " << typeOfScale << std::endl;
         std::cout << "scaled inputs: " << scaledInputs[0] << ", " << scaledInputs[1] << std::endl;
     }
 }
@@ -81,6 +96,7 @@ void GHSChassis::setDrivetrains(bool debug)
     if (debug)
     {
         std::cout << "leftmotor_vel" << std::to_string(leftMotors->get_actual_velocity());
-        std::cout << "rightmotor_vel" << std::to_string(rightMotors->get_actual_velocity());
+        std::cout << ";  rightmotor_vel" << std::to_string(rightMotors->get_actual_velocity());
+        std::cout << std::endl;
     }
 }
