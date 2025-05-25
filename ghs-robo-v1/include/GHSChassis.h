@@ -8,14 +8,17 @@
 class GHSChassis
 {
 public:
-    GHSChassis(const std::shared_ptr<pros::v5::MotorGroup> ileftMotors,
+    GHSChassis(const std::shared_ptr<pros::Controller> icontroller,
+               const std::shared_ptr<pros::v5::MotorGroup> ileftMotors,
                const std::shared_ptr<pros::v5::MotorGroup> irightMotors,
                const int irpm);
 
-    GHSChassis(const std::shared_ptr<pros::v5::MotorGroup> ileftMotors,
+    GHSChassis(const std::shared_ptr<pros::Controller> icontroller,
+               const std::shared_ptr<pros::v5::MotorGroup> ileftMotors,
                const std::shared_ptr<pros::v5::MotorGroup> irightMotors,
                const int irpm, const double ipolyParams);
     // Velocities(double inputx, double inputy)
+    std::shared_ptr<pros::Controller> controller;
     std::shared_ptr<pros::MotorGroup> leftMotors;
     std::shared_ptr<pros::MotorGroup> rightMotors;
     int rpm;
@@ -30,6 +33,7 @@ private:
     std::array<double, 2> scaledInputs; // scaled inputs
 
     std::array<double, 2> motorScaled;
+    void getInputs(bool debug);
     void scaleInputs(bool debug);
     void motorScale(bool debug);
     void scalePolys();

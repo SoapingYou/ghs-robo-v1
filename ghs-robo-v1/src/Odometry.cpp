@@ -48,49 +48,56 @@ void Odometry::deltaLRS(bool debug)
     std::vector<double> leftMotorEncoders = leftMotors->get_position_all();
     std::vector<double> rightMotorEncoders = rightMotors->get_position_all();
     double total_left_encoder_avg, total_right_encoder_avg;
-    double left_encoder_avg, right_encoder_avg;
+    double left_encoder_avg = 0, right_encoder_avg = 0;
+    if (!prevLeftMotorEncoders.size())
+    {
+        for (int i = 0; i < leftMotorEncoders.size(); i++)
+        {
+            prevLeftMotorEncoders.push_back(0);
+            prevRightMotorEncoders.push_back(0);
+        }
+    }
+    for (int i = 0; i < leftMotorEncoders.size(); i++)
+    {
+        if (debug)
+            std::cout << "left motor encoder: " << leftMotorEncoders[i] - prevLeftMotorEncoders[i] << std::endl;
+        left_encoder_avg += leftMotorEncoders[i] - prevLeftMotorEncoders[i];
+        total_left_encoder_avg += leftMotorEncoders[i];
+    }
+    for (auto i : rightMotorEncoders)
+    {
+        if (debug)
+            std::cout << "right motor encoder: " << rightMotorEncoders[i] - prevRightMotorEncoders[i] << std::endl;
+        right_encoder_avg += rightMotorEncoders[i] - prevRightMotorEncoders[i];
+        total_right_encoder_avg += rightMotorEncoders[i];
+    }
 
-    // for (int i = 0; i < leftMotorEncoders.size(); i++)
-    //{
-    //      if (debug)
-    //          std::cout << "left motor encoder: " << leftMotorEncoders[i] - prevLeftMotorEncoders[i] << std::endl;
-    //      left_encoder_avg += leftMotorEncoders[i] - prevLeftMotorEncoders[i];
-    //      // total_left_encoder_avg += leftMotorEncoders[i];
-    //}
-    // for (auto i : rightMotorEncoders)
-    // {
-    //     if (debug)
-    //         std::cout << "right motor encoder: " << rightMotorEncoders[i] - prevRightMotorEncoders[i] << std::endl;
-    //     right_encoder_avg += rightMotorEncoders[i] - prevRightMotorEncoders[i];
-    //     // total_right_encoder_avg += rightMotorEncoders[i];
-    // }
+    prevLeftMotorEncoders = leftMotorEncoders;
+    prevRightMotorEncoders = rightMotorEncoders;
 
-    // prevLeftMotorEncoders = leftMotorEncoders;
-    // prevRightMotorEncoders = rightMotorEncoders;
+    left_encoder_avg /= leftMotorEncoders.size();
+    right_encoder_avg /= rightMotorEncoders.size();
+    total_left_encoder_avg /= leftMotorEncoders.size();
+    total_right_encoder_avg /= rightMotorEncoders.size();
 
-    // left_encoder_avg /= leftMotorEncoders.size();
-    // right_encoder_avg /= rightMotorEncoders.size();
-    // total_left_encoder_avg /= leftMotorEncoders.size();
-    // total_right_encoder_avg /= rightMotorEncoders.size();
+    if (debug)
+    {
+        std::cout << "left motor encoder change avg, degrees supposedly: " << left_encoder_avg << std::endl;
+        std::cout << "right motor encoder change avg, degrees supposedly: " << right_encoder_avg << std::endl;
+    }
 
-    // if (debug)
-    // {
-    //     std::cout << "left motor encoder change avg, degrees supposedly: " << left_encoder_avg << std::endl;
-    //     std::cout << "right motor encoder change avg, degrees supposedly: " << right_encoder_avg << std::endl;
-    // }
+    deltaL = left_encoder_avg / 360. * (wheelRadius * 2.0 * M_PI);
+    deltaR = right_encoder_avg / 360. * (wheelRadius * 2.0 * M_PI);
+    totalL = total_left_encoder_avg / 360. * (wheelRadius * 2.0 * M_PI);
+    totalR = total_right_encoder_avg / 360. * (wheelRadius * 2.0 * M_PI);
 
-    // deltaL = left_encoder_avg / 360. * (wheelRadius * 2.0 * M_PI);
-    // deltaR = right_encoder_avg / 360. * (wheelRadius * 2.0 * M_PI);
-    // totalL = total_left_encoder_avg / 360. * (wheelRadius * 2.0 * M_PI);
-    // totalR = total_right_encoder_avg / 360. * (wheelRadius * 2.0 * M_PI);
-
-    // if (debug)
-    // {
-    //     std::cout << "left dist change:" << deltaL << std::endl;
-    //     std::cout << "right dist change:" << deltaR << std::endl;
-    //     std::cout << "left dist tot:" << totalL << std::endl;
-    //     std::cout << "right dist tot:" << totalR << std::endl;
-    // }
+    if (debug)
+    {
+        std::cout << "left dist change:" << deltaL << std::endl;
+        std::cout << "right dist change:" << deltaR << std::endl;
+        std::cout << "left dist tot:" << totalL << std::endl;
+        std::cout << "right dist tot:" << totalR << std::endl;
+    }
 
     // if (threeSensors)
     // {
